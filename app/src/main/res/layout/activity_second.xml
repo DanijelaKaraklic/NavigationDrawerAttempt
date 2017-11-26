@@ -5,7 +5,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+
     tools:openDrawer="start">
 
     <include
@@ -14,7 +14,7 @@
         android:layout_height="match_parent" />
 
     <FrameLayout
-        android:id="@+id/content_frame1"
+        android:id="@+id/content_frame"
         android:layout_width="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_height="wrap_content" >
@@ -39,3 +39,5 @@
         app:menu="@menu/activity_home_drawer" />
 
 </android.support.v4.widget.DrawerLayout>
+
+   <!-- android:fitsSystemWindows="true"-->
