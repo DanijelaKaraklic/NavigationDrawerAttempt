@@ -1,14 +1,26 @@
 package rs.aleph.android.example21.activities;
 
+import android.Manifest;
 import android.app.Dialog;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +30,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
@@ -43,7 +56,20 @@ public class Home extends AppCompatActivity
     private ActionBarDrawerToggle toggle;
     DrawerLayout.DrawerListener listener;
 
+    private boolean toast;
+    private boolean notification;
+
     private DatabaseHelper databaseHelper;
+
+    private SharedPreferences sharedPreferences;
+
+
+    private static final String TAG = "PERMISSIONS";
+
+    public static final String NOTIFICATION = "pref_notif";
+    public static final String TOAST = "pref_toast";
+    public static final String REAL_ESTATE = "selectedItemId";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,22 +78,13 @@ public class Home extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
 
         final ListView listView = (ListView)findViewById(R.id.real_estates);
 
         try {
-             /*   RealEstate rs = new RealEstate();
-            rs.setmId(0);
-            rs.setmName("nesto");
-            rs.setmDescription("nesto");
-            rs.setmAdress("nesto");
-            rs.setmImage("nesto");
-            rs.setmTel(11111);
-            rs.setmPrice(2.2);
-            rs.setmRoom(2);
-            rs.setmQuadrature(12.5);
-            List<RealEstate> listRs = new ArrayList<>();
-            listRs.add(rs);*/
+
 
             List<RealEstate> listRs = getDatabaseHelper().getRealEstateDao().queryForAll();
             ListAdapter adapter1 = new ArrayAdapter<RealEstate>(Home.this,R.layout.list_item,listRs);
@@ -78,7 +95,7 @@ public class Home extends AppCompatActivity
                     Intent intent = new Intent(Home.this,SecondActivity.class);
                     RealEstate r = (RealEstate)listView.getItemAtPosition(position);
                     long selectedItemId = r.getmId();
-                    intent.putExtra("selectedItemId",selectedItemId);
+                    intent.putExtra(REAL_ESTATE,selectedItemId);
                     startActivity(intent);
                 }
             });
@@ -174,7 +191,8 @@ public class Home extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            Intent intent = new Intent(Home.this,SettingsActivity.class);
+            startActivity(intent);
         }else if (id == R.id.action_add){
             final Dialog dialog = new Dialog(Home.this);
 
@@ -247,27 +265,10 @@ public class Home extends AppCompatActivity
                 startActivity(h);
                 break;
             case R.id.nav_settings:
-                Intent i = new Intent(Home.this,SecondActivity.class);
-                startActivity(i);
-            //pozivaju se aktivnosti koje su u navigation draweru
-           /* case R.id.nav_import:
-                Intent i= new Intent(Home.this,Import.class);
-                startActivity(i);
+                /*Intent i = new Intent(Home.this,SettingsActivity.class);
+                startActivity(i);*/
                 break;
-            case R.id.nav_gallery:
-                Intent g= new Intent(Home.this,Gallery.class);
-                startActivity(g);
-                break;
-            case R.id.nav_slideshow:
-                Intent s= new Intent(Home.this,Slideshow.class);
-                startActivity(s);
-            case R.id.nav_tools:
-                Intent t= new Intent(Home.this,Tools.class);
-                startActivity(t);
-                break;*/
-            // this is done, now let us go and intialise the home page.
-            // after this lets start copying the above.
-            // FOLLOW MEEEEE>>>
+
         }
 
 
@@ -294,4 +295,109 @@ public class Home extends AppCompatActivity
             databaseHelper = null;
         }
     }
+
+
+
+    public  boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED &&
+                    checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                            == PackageManager.PERMISSION_GRANTED) {
+                Log.v(TAG,"Permission is granted");
+                return true;
+            } else {
+
+                Log.v(TAG,"Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(TAG,"Permission is granted");
+            return true;
+        }
+    }
+
+
+   /* private void selectPicture(){
+        Intent intent = new Intent();
+        intent.setType("image*//*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE);
+    }*/
+
+
+   /* public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == SELECT_PICTURE) {
+                Uri selectedImageUri = data.getData();
+                //String selectedImagePath = selectedImageUri.getPath();
+
+                Dialog dialog = new Dialog(MainActivity.this);
+                dialog.setContentView(R.layout.image_dialog);
+                dialog.setTitle("Image dialog");
+
+                ImageView image = (ImageView) dialog.findViewById(R.id.image);
+
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
+                    image.setImageBitmap(bitmap);
+                    Toast.makeText(this, selectedImageUri.getPath(),Toast.LENGTH_SHORT).show();
+
+                    dialog.show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }*/
+
+
+
+    /**
+     *
+     * Ako odredjena funkcija nije dopustena, saljemo zahtev android
+     * sistemu da zahteva odredjene permisije. Korisniku seprikazuje
+     * diloag u kom on zeli ili ne da dopusti odedjene permisije.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(grantResults[0]== PackageManager.PERMISSION_GRANTED
+                && grantResults[1] == PackageManager.PERMISSION_GRANTED){
+            Log.v(TAG,"Permission: "+permissions[0]+ "was "+grantResults[0]);
+        }
+    }
+
+    private void showNotification(String title,String message){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        Bitmap bitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.ic_action_real_estates);
+        builder.setSmallIcon(R.drawable.ic_action_real_estates);
+        builder.setContentTitle(title);
+        builder.setContentText(message);
+        builder.setLargeIcon(bitmap);
+
+        // Shows notification with the notification manager (notification ID is used to update the notification later on)
+        //umesto this aktivnost
+        NotificationManager manager = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(1, builder.build());
+    }
+
+    private void showMessage(String message,String title){
+        toast = sharedPreferences.getBoolean(TOAST,false);
+        notification = sharedPreferences.getBoolean(NOTIFICATION,false);
+        if (toast){
+            Toast.makeText(this, message,Toast.LENGTH_SHORT).show();
+        }
+        if (notification){
+            showNotification(message,title);
+        }
+
+    }
+
+
+
+
 }
