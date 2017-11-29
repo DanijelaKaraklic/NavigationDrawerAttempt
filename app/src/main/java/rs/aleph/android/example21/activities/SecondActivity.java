@@ -18,6 +18,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
@@ -65,6 +66,7 @@ public class SecondActivity extends AppCompatActivity
     private boolean toast;
     private boolean notification;
     private SharedPreferences sharedPreferences;
+    private AlertDialog dialogAlert;
 
 
     private DatabaseHelper databaseHelper;
@@ -587,6 +589,16 @@ public class SecondActivity extends AppCompatActivity
                 Intent i = new Intent(SecondActivity.this,SettingsActivity.class);
                 startActivity(i);
                 break;
+
+            /*if (dialogAlert == null) {
+                dialogAlert = new AboutDialog(SecondActivity.this).prepareDialog();
+            } else {
+                if (dialogAlert.isShowing()) {
+                    dialogAlert.dismiss();
+                }
+
+            }
+            dialogAlert.show();*/
 
 
         }
